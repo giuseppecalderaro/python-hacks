@@ -6,5 +6,5 @@ code = """g fmnc wms bgblr rpylqjyrc gr zw fylb. rfyrq ufyr amknsrcpq ypc dmp. b
 
 if __name__ == '__main__':
     print("Level 2");
-    mapping = string.maketrans(string.ascii_lowercase, string.ascii_lowercase[2:] + string.ascii_lowercase[:2]);
+    mapping = str.maketrans(string.ascii_lowercase, string.ascii_lowercase[2:] + string.ascii_lowercase[:2]);
     print(code.translate(mapping));
