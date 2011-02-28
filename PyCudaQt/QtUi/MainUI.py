@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainUI.ui'
 #
-# Created: Thu Feb 24 22:22:39 2011
+# Created: Mon Feb 28 12:15:25 2011
 #      by: PyQt4 UI code generator 4.8.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -23,20 +23,24 @@ class Ui_MainWindow(object):
         self.graphicsView = QtGui.QGraphicsView(self.centralwidget)
         self.graphicsView.setGeometry(QtCore.QRect(10, 10, 781, 471))
         self.graphicsView.setObjectName(_fromUtf8("graphicsView"))
-        self.CpuButton = QtGui.QPushButton(self.centralwidget)
-        self.CpuButton.setGeometry(QtCore.QRect(160, 510, 114, 32))
-        self.CpuButton.setObjectName(_fromUtf8("CpuButton"))
-        self.CpuButton.setDisabled(True)
-        self.GpuButton = QtGui.QPushButton(self.centralwidget)
-        self.GpuButton.setGeometry(QtCore.QRect(500, 510, 114, 32))
-        self.GpuButton.setObjectName(_fromUtf8("GpuButton"))
-        self.GpuButton.setDisabled(True)
+        self.StartButton = QtGui.QPushButton(self.centralwidget)
+        self.StartButton.setGeometry(QtCore.QRect(660, 510, 114, 32))
+        self.StartButton.setObjectName(_fromUtf8("StartButton"))
         self.progressBar = QtGui.QProgressBar(self.centralwidget)
-        self.progressBar.setGeometry(QtCore.QRect(270, 490, 231, 23))
-        self.progressBar.setProperty(_fromUtf8("value"), 24)
+        self.progressBar.setGeometry(QtCore.QRect(10, 490, 321, 23))
+        self.progressBar.setProperty(_fromUtf8("value"), 0)
         self.progressBar.setObjectName(_fromUtf8("progressBar"))
-        self.progressBar.setMinimum(0)
-        self.progressBar.setHidden(True)
+        self.groupBox = QtGui.QGroupBox(self.centralwidget)
+        self.groupBox.setGeometry(QtCore.QRect(530, 490, 120, 80))
+        self.groupBox.setTitle(_fromUtf8(""))
+        self.groupBox.setObjectName(_fromUtf8("groupBox"))
+        self.radioCPU = QtGui.QRadioButton(self.groupBox)
+        self.radioCPU.setGeometry(QtCore.QRect(10, 10, 102, 21))
+        self.radioCPU.setObjectName(_fromUtf8("radioCPU"))
+        self.radioCPU.setChecked(True)
+        self.radioGPU = QtGui.QRadioButton(self.groupBox)
+        self.radioGPU.setGeometry(QtCore.QRect(10, 40, 102, 21))
+        self.radioGPU.setObjectName(_fromUtf8("radioGPU"))
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 22))
@@ -49,12 +53,10 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
         self.actionOpen = QtGui.QAction(MainWindow)
         self.actionOpen.setObjectName(_fromUtf8("actionOpen"))
-        self.actionCPU = QtGui.QAction(MainWindow)
-        self.actionCPU.setObjectName(_fromUtf8("actionCPU"))
-        self.actionGPU = QtGui.QAction(MainWindow)
-        self.actionGPU.setObjectName(_fromUtf8("actionGPU"))
         self.actionSave = QtGui.QAction(MainWindow)
         self.actionSave.setObjectName(_fromUtf8("actionSave"))
+        self.actionStart = QtGui.QAction(MainWindow)
+        self.actionStart.setObjectName(_fromUtf8("actionStart"))
         self.menuFile.addAction(self.actionOpen)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionSave)
@@ -65,11 +67,11 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
-        self.CpuButton.setText(QtGui.QApplication.translate("MainWindow", "CPU", None, QtGui.QApplication.UnicodeUTF8))
-        self.GpuButton.setText(QtGui.QApplication.translate("MainWindow", "GPU", None, QtGui.QApplication.UnicodeUTF8))
+        self.StartButton.setText(QtGui.QApplication.translate("MainWindow", "Start", None, QtGui.QApplication.UnicodeUTF8))
+        self.radioCPU.setText(QtGui.QApplication.translate("MainWindow", "CPU", None, QtGui.QApplication.UnicodeUTF8))
+        self.radioGPU.setText(QtGui.QApplication.translate("MainWindow", "GPU/CUDA", None, QtGui.QApplication.UnicodeUTF8))
         self.menuFile.setTitle(QtGui.QApplication.translate("MainWindow", "File", None, QtGui.QApplication.UnicodeUTF8))
         self.actionOpen.setText(QtGui.QApplication.translate("MainWindow", "Open", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionCPU.setText(QtGui.QApplication.translate("MainWindow", "CPU", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionGPU.setText(QtGui.QApplication.translate("MainWindow", "GPU", None, QtGui.QApplication.UnicodeUTF8))
         self.actionSave.setText(QtGui.QApplication.translate("MainWindow", "Save", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionStart.setText(QtGui.QApplication.translate("MainWindow", "Start", None, QtGui.QApplication.UnicodeUTF8))
 
