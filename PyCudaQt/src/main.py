@@ -3,8 +3,10 @@ import sys
 # Qt4 import(s)
 from PyQt4 import Qt, QtCore, QtGui
 # PyCUDA import(s)
+from pycuda.compiler import SourceModule
 import pycuda.driver as cuda
 import pycuda.tools
+from cudakernel import code
 ###
 import MainUI      
     
@@ -15,33 +17,15 @@ class ThreadJulia(QtCore.QThread):
     def __del__(self):
         self.exiting = True
         self.wait()
-    def Julia(self, data, gpu):
+    def Julia(self, data, gpu=False):
         self.data = data
         self.gpu = gpu
         self.start()
     def run(self):
-        if self.gpu == 0:
+        if self.gpu is False:
             self.JuliaCPU()
-        elif self.gpu == 1:
-            cuda.init()
-            gpudev = cuda.Device(0)
-            # Memory on Host
-            single_data = numpy.copy(self.data)
-            # Create CUDA Context
-            ctx = pycuda.tools.make_default_context()
-            # Memory on Device
-            gpu_alloc = cuda.mem_alloc(single_data.nbytes)
-            # Copy data from Host to Device
-            cuda.memcpy_htod(gpu_alloc, single_data)
-            # Execute on host
-            from cudakernel import mod
-            kernel = mod.get_function("JuliaGPU")
-            kernel(gpu_alloc, block=(1, 1, 1))
-            # Copy data from Device to Host
-            cuda.memcpy_dtoh(single_data, gpu_alloc)
-            ctx.pop()
-            self.data = single_data
-            self.emit(QtCore.SIGNAL("ThreadJuliaCompleted(PyQt_PyObject)"), self.data)
+        else:
+            self.JuliaGPU()
     def JuliaCPU(self):
         rows = numpy.shape(self.data)[0]
         columns = numpy.shape(self.data)[1]
@@ -62,6 +46,28 @@ class ThreadJulia(QtCore.QThread):
             if (numpy.abs(a) > 1000):  
                 return 0
         return 1
+    def JuliaGPU(self):
+        # Init CUDA
+        cuda.init()
+        # Create CUDA Context
+        # ctx = pycuda.tools.make_default_context()
+        gpudev = cuda.Device(0)
+        ctx = cuda.Device.make_context(gpudev)
+        # Memory on Host
+        single_data = numpy.copy(self.data)
+        # Memory on Device
+        gpu_alloc = cuda.mem_alloc(single_data.nbytes)
+        # Copy data from Host to Device
+        cuda.memcpy_htod(gpu_alloc, single_data)
+        # Execute on host
+        mod = SourceModule(code)
+        self.kernel = mod.get_function("JuliaGPU")
+        self.kernel(gpu_alloc, block=(1, 1, 1))
+        # Copy data from Device to Host
+        cuda.memcpy_dtoh(single_data, gpu_alloc)
+        ctx.pop()
+        self.data = single_data
+        self.emit(QtCore.SIGNAL("ThreadJuliaCompleted(PyQt_PyObject)"), self.data)
           
 class MainWindow(QtGui.QMainWindow):
     def __init__(self):
@@ -72,6 +78,7 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.actionOpen.setShortcut("Ctrl+O")
         self.connect(self.ui.actionOpen, QtCore.SIGNAL("triggered()"), self.fileOpen)
         self.connect(self.ui.StartButton, QtCore.SIGNAL("clicked()"), self.StartJulia)
+        self.ui.progressBar.setVisible(False)
         self.ui.StartButton.setEnabled(False)
         self.ThreadJulia = ThreadJulia()
     def fileOpen(self):
@@ -87,15 +94,12 @@ class MainWindow(QtGui.QMainWindow):
     def StartJulia(self):
         import qimage2ndarray
         data = qimage2ndarray.rgb_view(self.image)
-        self.ui.progressBar.setVisible(True)
         self.connect(self.ThreadJulia, QtCore.SIGNAL("ThreadJuliaCompleted(PyQt_PyObject)"), self.CompletedJulia)
         self.connect(self.ThreadJulia, QtCore.SIGNAL("ThreadJuliaUpdateStatus(int)"), self.UpdateStatusJulia)
+        self.ui.progressBar.setVisible(True)
         self.ui.StartButton.setEnabled(False)
         # Spawn the thread
-        if self.ui.radioCPU.isChecked():
-            self.ThreadJulia.Julia(data, 0)
-        else:
-            self.ThreadJulia.Julia(data, 1)
+        self.ThreadJulia.Julia(data, self.ui.radioGPU.isChecked())
     def CompletedJulia(self, data):
         import qimage2ndarray
         self.ui.progressBar.setHidden(True)
