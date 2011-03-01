@@ -20,6 +20,8 @@ class ThreadJulia(QtCore.QThread):
     def Julia(self, data, gpu=False):
         self.data = data
         self.gpu = gpu
+        self.rows = numpy.shape(self.data)[0]
+        self.columns = numpy.shape(self.data)[1]
         self.start()
     def run(self):
         if self.gpu is False:
@@ -27,16 +29,14 @@ class ThreadJulia(QtCore.QThread):
         else:
             self.JuliaGPU()
     def JuliaCPU(self):
-        rows = numpy.shape(self.data)[0]
-        columns = numpy.shape(self.data)[1]
-        for x in range(rows):
-            for y in range(columns):
-                self.data[x][y][0] = 0xFF * self.PixelJulia(x, y, rows, columns)
+        for x in range(self.rows):
+            for y in range(self.columns):
+                self.data[x][y][0] = 0xFF * self.JuliaPixel(x, y, self.rows, self.columns)
                 self.data[x][y][1] = 0
                 self.data[x][y][2] = 0
-            self.emit(QtCore.SIGNAL("ThreadJuliaUpdateStatus(int)"), (x * 100) / rows)
+            self.emit(QtCore.SIGNAL("ThreadJuliaUpdateStatus(int)"), (x * 100) / self.rows)
         self.emit(QtCore.SIGNAL("ThreadJuliaCompleted(PyQt_PyObject)"), self.data)
-    def PixelJulia(self, x, y, rows, columns):
+    def JuliaPixel(self, x, y, rows, columns):
         c = numpy.complex(-0.8, 0.156)
         x = 1.5 * (rows/2 - x)/(rows/2)
         y = 1.5 * (columns/2 - y)/(columns/2)
@@ -62,7 +62,7 @@ class ThreadJulia(QtCore.QThread):
         # Execute on host
         mod = SourceModule(code)
         self.kernel = mod.get_function("JuliaGPU")
-        self.kernel(gpu_alloc, block=(1, 1, 1))
+        self.kernel(gpu_alloc, block=(1, 1, 1), grid=(self.rows, self.columns))
         # Copy data from Device to Host
         cuda.memcpy_dtoh(single_data, gpu_alloc)
         ctx.pop()
@@ -82,8 +82,8 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.StartButton.setEnabled(False)
         self.ThreadJulia = ThreadJulia()
     def fileOpen(self):
-#        self.filename = QtGui.QFileDialog.getOpenFileName(parent=None, caption="FileDialog")
-        self.filename = "/Users/giuseppecalderaro/Downloads/irina.jpg"
+        self.filename = QtGui.QFileDialog.getOpenFileName(parent=None, caption="FileDialog")
+        # self.filename = "/Users/giuseppecalderaro/Downloads/irina.jpg"
         if (self.filename != ""):
             scene = QtGui.QGraphicsScene()
             self.image = QtGui.QImage(self.filename)
