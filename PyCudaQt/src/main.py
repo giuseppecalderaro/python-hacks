@@ -60,13 +60,12 @@ class ThreadJulia(QtCore.QThread):
         cuda.memcpy_htod(gpu_alloc, single_data)
         # Execute on host
         mod = SourceModule(code)
-        self.kernel = mod.get_function("JuliaGPU")
-        self.kernel(gpu_alloc, block=(1, 1, 1), grid=(self.rows, self.columns))
+        kernel = mod.get_function("JuliaGPU")
+        kernel(gpu_alloc, block=(1, 1, 1), grid=(self.rows, self.columns))
         # Copy data from Device to Host
         cuda.memcpy_dtoh(single_data, gpu_alloc)
         ctx.pop()
-        self.data = single_data
-        self.emit(QtCore.SIGNAL("ThreadJuliaCompleted(PyQt_PyObject)"), self.data)
+        self.emit(QtCore.SIGNAL("ThreadJuliaCompleted(PyQt_PyObject)"), single_data)
           
 class MainWindow(QtGui.QMainWindow):
     def __init__(self):
@@ -79,32 +78,23 @@ class MainWindow(QtGui.QMainWindow):
         self.connect(self.ui.actionOpen, QtCore.SIGNAL("triggered()"), self.fileOpen)
         self.connect(self.ui.actionSave, QtCore.SIGNAL("triggered()"), self.fileSave)
         self.connect(self.ui.StartButton, QtCore.SIGNAL("clicked()"), self.StartJulia)
+        self.ThreadJulia = ThreadJulia()
+        self.connect(self.ThreadJulia, QtCore.SIGNAL("ThreadJuliaCompleted(PyQt_PyObject)"), self.CompletedJulia)
+        self.connect(self.ThreadJulia, QtCore.SIGNAL("ThreadJuliaUpdateStatus(int)"), self.UpdateStatusJulia)
         self.ui.progressBar.setVisible(False)
         self.ui.StartButton.setEnabled(False)
-        self.ThreadJulia = ThreadJulia()
     def fileOpen(self):
-        filename = QtGui.QFileDialog.getOpenFileName(parent=None, caption="FileDialog")
-        if (filename != ""):
-            scene = QtGui.QGraphicsScene()
+        filename = QtGui.QFileDialog.getOpenFileName(parent=None, caption="Open")
+        if filename != "":
             self.image = QtGui.QImage(filename)
-            rows = self.image.height()
-            columns = self.image.width()
-            self.ui.labelRows.setText("Rows: " + str(rows))
-            self.ui.labelColumns.setText("Columns: " + str(columns))
-            pixmap = QtGui.QPixmap(self.image)
-            scene.addPixmap(pixmap)
-            self.ui.graphicsView.setScene(scene)
-            if (rows < 512):
-                self.ui.graphicsView.resize(columns + 10, rows + 10)
-            self.ui.StartButton.setEnabled(True)
+            self.SetImage(self.image)
     def fileSave(self):
         filename = QtGui.QFileDialog.getSaveFileName(parent=None, caption="Save")
-        self.image.save(filename)
+        if filename != "":
+            self.image.save(filename)
     def StartJulia(self):
         import qimage2ndarray
         data = qimage2ndarray.rgb_view(self.image)
-        self.connect(self.ThreadJulia, QtCore.SIGNAL("ThreadJuliaCompleted(PyQt_PyObject)"), self.CompletedJulia)
-        self.connect(self.ThreadJulia, QtCore.SIGNAL("ThreadJuliaUpdateStatus(int)"), self.UpdateStatusJulia)
         self.ui.progressBar.setVisible(True)
         self.ui.StartButton.setEnabled(False)
         # Spawn the thread
@@ -120,13 +110,21 @@ class MainWindow(QtGui.QMainWindow):
             self.ui.labelTime.setText("Time: %dms" % self.time.elapsed())
         self.ui.progressBar.setHidden(True)
         self.image = qimage2ndarray.array2qimage(data)
-        pixmap = QtGui.QPixmap(self.image)
-        scene = QtGui.QGraphicsScene()
-        scene.addPixmap(pixmap)
-        self.ui.graphicsView.setScene(scene)
-        self.ui.StartButton.setEnabled(True)
+        self.SetImage(self.image)
     def UpdateStatusJulia(self, status):
         self.ui.progressBar.setValue(status)
+    def SetImage(self, image):
+        rows = image.height()
+        columns = image.width()
+        self.ui.labelRows.setText("Rows: " + str(rows))
+        self.ui.labelColumns.setText("Columns: " + str(columns))
+        pixmap = QtGui.QPixmap(image)
+        scene = QtGui.QGraphicsScene()
+        scene.addPixmap(pixmap)
+        if (rows < 512):
+            self.ui.graphicsView.resize(columns + 10, rows + 10)
+        self.ui.graphicsView.setScene(scene)
+        self.ui.StartButton.setEnabled(True)
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
