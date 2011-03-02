@@ -31,9 +31,10 @@ class ThreadJulia(QtCore.QThread):
     def JuliaCPU(self):
         for x in range(self.rows):
             for y in range(self.columns):
-                self.data[x][y][0] = 0xFF * self.JuliaPixel(x, y, self.rows, self.columns)
-                self.data[x][y][1] = 0
-                self.data[x][y][2] = 0
+                julia = self.JuliaPixel(x, y, self.rows, self.columns)
+                self.data[x][y][0] *= julia # Red channel
+                self.data[x][y][1] *= julia # Green channel 
+                self.data[x][y][2] *= julia # Blue channel
             self.emit(QtCore.SIGNAL("ThreadJuliaUpdateStatus(int)"), (x * 100) / self.rows)
         self.emit(QtCore.SIGNAL("ThreadJuliaCompleted(PyQt_PyObject)"), self.data)
     def JuliaPixel(self, x, y, rows, columns):
@@ -50,9 +51,7 @@ class ThreadJulia(QtCore.QThread):
         # Init CUDA
         cuda.init()
         # Create CUDA Context
-        # ctx = pycuda.tools.make_default_context()
-        gpudev = cuda.Device(0)
-        ctx = cuda.Device.make_context(gpudev)
+        ctx = pycuda.tools.make_default_context()
         # Memory on Host
         single_data = numpy.copy(self.data)
         # Memory on Device
@@ -76,21 +75,31 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.setupUi(self)
         self.statusBar().showMessage("Ready")
         self.ui.actionOpen.setShortcut("Ctrl+O")
+        self.ui.actionSave.setShortcut("Ctrl+S")
         self.connect(self.ui.actionOpen, QtCore.SIGNAL("triggered()"), self.fileOpen)
+        self.connect(self.ui.actionSave, QtCore.SIGNAL("triggered()"), self.fileSave)
         self.connect(self.ui.StartButton, QtCore.SIGNAL("clicked()"), self.StartJulia)
         self.ui.progressBar.setVisible(False)
         self.ui.StartButton.setEnabled(False)
         self.ThreadJulia = ThreadJulia()
     def fileOpen(self):
-        self.filename = QtGui.QFileDialog.getOpenFileName(parent=None, caption="FileDialog")
-        # self.filename = "/Users/giuseppecalderaro/Downloads/irina.jpg"
-        if (self.filename != ""):
+        filename = QtGui.QFileDialog.getOpenFileName(parent=None, caption="FileDialog")
+        if (filename != ""):
             scene = QtGui.QGraphicsScene()
-            self.image = QtGui.QImage(self.filename)
+            self.image = QtGui.QImage(filename)
+            rows = self.image.height()
+            columns = self.image.width()
+            self.ui.labelRows.setText("Rows: " + str(rows))
+            self.ui.labelColumns.setText("Columns: " + str(columns))
             pixmap = QtGui.QPixmap(self.image)
-            scene.addPixmap(pixmap.scaled(self.ui.graphicsView.size()))
+            scene.addPixmap(pixmap)
             self.ui.graphicsView.setScene(scene)
+            if (rows < 512):
+                self.ui.graphicsView.resize(columns + 10, rows + 10)
             self.ui.StartButton.setEnabled(True)
+    def fileSave(self):
+        filename = QtGui.QFileDialog.getSaveFileName(parent=None, caption="Save")
+        self.image.save(filename)
     def StartJulia(self):
         import qimage2ndarray
         data = qimage2ndarray.rgb_view(self.image)
@@ -99,14 +108,21 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.progressBar.setVisible(True)
         self.ui.StartButton.setEnabled(False)
         # Spawn the thread
+        self.time = QtCore.QTime()
+        self.time.start()
         self.ThreadJulia.Julia(data, self.ui.radioGPU.isChecked())
     def CompletedJulia(self, data):
         import qimage2ndarray
+        elapsed = self.time.elapsed()
+        if elapsed > 1000000:
+            self.ui.labelTime.setText("Time: %ds" % (self.time.elapsed() / 1000))
+        else:
+            self.ui.labelTime.setText("Time: %dms" % self.time.elapsed())
         self.ui.progressBar.setHidden(True)
-        newimage = qimage2ndarray.array2qimage(data)
-        newpixmap = QtGui.QPixmap(newimage)
+        self.image = qimage2ndarray.array2qimage(data)
+        pixmap = QtGui.QPixmap(self.image)
         scene = QtGui.QGraphicsScene()
-        scene.addPixmap(newpixmap.scaled(self.ui.graphicsView.size()))
+        scene.addPixmap(pixmap)
         self.ui.graphicsView.setScene(scene)
         self.ui.StartButton.setEnabled(True)
     def UpdateStatusJulia(self, status):

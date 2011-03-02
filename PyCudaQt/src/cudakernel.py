@@ -33,15 +33,15 @@ __device__ int PixelJulia(int x, int y, int rows, int columns)
 
 __global__ void JuliaGPU(unsigned char *data)
 {
-        int row = blockIdx.x;
+        int x = blockIdx.x;
         int rows = gridDim.x;
-        int column = blockIdx.y;
+        int y = blockIdx.y;
         int columns = gridDim.y;
-        int offset = column + row * columns;
+        int offset = y + x * columns;
         
-        int value = PixelJulia(row, column, rows, columns);
-        data[offset * 3 + 0] = 0xFF * value;
-        data[offset * 3 + 1] = 0;
-        data[offset * 3 + 2] = 0;
+        int value = PixelJulia(x, y, rows, columns);
+        data[offset * 3 + 0] *= value; /* Red channel.  */
+        data[offset * 3 + 1] *= value; /* Green channel.  */
+        data[offset * 3 + 2] *= value; /* Blue channel.  */
 }
 """
