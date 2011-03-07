@@ -1,5 +1,5 @@
 code = """
-__global__ void GpuRipple(unsigned char *data, double *ticks, int *rows, int *columns)
+__global__ void GpuRipple(unsigned char *data, int *ticks, int *rows, int *columns)
 {
         int x = threadIdx.x + blockIdx.x * blockDim.x;
         int y = threadIdx.y + blockIdx.y * blockDim.y;

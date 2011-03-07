@@ -7,8 +7,6 @@ import pycuda.driver as cuda
 import pycuda.tools
 from pycuda.compiler import SourceModule
 from cudakernel import code
-# qimage2ndarray import(s)
-import qimage2ndarray
 
 import MainUI
 
@@ -25,6 +23,8 @@ class MainWindow(QtGui.QMainWindow):
         self.timer = QtCore.QTimer()
         self.connect(self.timer, QtCore.SIGNAL("timeout()"), self.TimerExpired)
     def play(self):
+        # qimage2ndarray import(s)
+        import qimage2ndarray
         self.ui.playButton.setEnabled(False)
         self.ui.stopButton.setEnabled(True)
         self.rows = numpy.int32(512)
@@ -32,14 +32,17 @@ class MainWindow(QtGui.QMainWindow):
         self.threads = 16
         image = QtGui.QImage(self.rows, self.columns, QtGui.QImage.Format_RGB32)
         self.data = qimage2ndarray.rgb_view(image)
+        # Needs a contiguos buffer
         self.data = numpy.copy(self.data)
-        self.ticks = numpy.zeros(1)
+        self.ticks = numpy.zeros(1, dtype=numpy.int32);
         self.timer.start(16.667)
     def stop(self):
         self.timer.stop()
         self.ui.playButton.setEnabled(True)
         self.ui.stopButton.setEnabled(False)
     def SetImage(self, data):
+        # qimage2ndarray import(s)
+        import qimage2ndarray
         image = qimage2ndarray.array2qimage(data)
         pixmap = QtGui.QPixmap(image)
         scene = QtGui.QGraphicsScene()
