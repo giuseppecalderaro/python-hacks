@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:/Users/giuseppe/workspace/Chapter2/QtUi/MainUI.ui'
+# Form implementation generated from reading ui file 'c:/Users/giuseppe/pyhacks/GpuRipple/QtUi/MainUI.ui'
 #
-# Created: Sat Mar 05 15:54:35 2011
+# Created: Mon Mar 07 21:22:12 2011
 #      by: PyQt4 UI code generator 4.8.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -29,6 +29,12 @@ class Ui_MainWindow(object):
         self.stopButton = QtGui.QPushButton(self.centralwidget)
         self.stopButton.setGeometry(QtCore.QRect(710, 530, 75, 23))
         self.stopButton.setObjectName(_fromUtf8("stopButton"))
+        self.GpuSyncBox = QtGui.QCheckBox(self.centralwidget)
+        self.GpuSyncBox.setGeometry(QtCore.QRect(20, 500, 91, 16))
+        self.GpuSyncBox.setObjectName(_fromUtf8("GpuSyncBox"))
+        self.SyncedBox = QtGui.QCheckBox(self.centralwidget)
+        self.SyncedBox.setGeometry(QtCore.QRect(20, 520, 91, 16))
+        self.SyncedBox.setObjectName(_fromUtf8("SyncedBox"))
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
@@ -45,4 +51,6 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
         self.playButton.setText(QtGui.QApplication.translate("MainWindow", "Play", None, QtGui.QApplication.UnicodeUTF8))
         self.stopButton.setText(QtGui.QApplication.translate("MainWindow", "Stop", None, QtGui.QApplication.UnicodeUTF8))
+        self.GpuSyncBox.setText(QtGui.QApplication.translate("MainWindow", "GPU SyncTest", None, QtGui.QApplication.UnicodeUTF8))
+        self.SyncedBox.setText(QtGui.QApplication.translate("MainWindow", "Synced", None, QtGui.QApplication.UnicodeUTF8))
 
