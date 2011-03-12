@@ -1,5 +1,6 @@
 import sys
 import numpy
+import random
 # Qt4 import(s)
 from PyQt4 import QtCore, QtGui
 # PyCUDA import(s)
@@ -18,32 +19,57 @@ class MainWindow(QtGui.QMainWindow):
         self.statusBar().showMessage("Ready")
         self.ui.pushButton.setEnabled(True)
         self.connect(self.ui.pushButton, QtCore.SIGNAL("clicked()"), self.go)
+        random.seed()
+        self.numspheres = numpy.int32(10)
+        self.rows = numpy.int32(512)
+        self.columns = numpy.int32(256)
+        self.threads = 16;
     def go(self):
         import qimage2ndarray
-        self.spheres = 20
-        self.rows = 512
-        self.columns = 256
         image = QtGui.QImage(self.rows, self.columns, QtGui.QImage.Format_RGB32)
         self.data = qimage2ndarray.rgb_view(image)
         # Needs a contiguos buffer
         self.data = numpy.copy(self.data)
+        self.spheres = numpy.copy(self.CreateSpheres())
         # Init CUDA
         cuda.init()
         # Create CUDA Context
         ctx = pycuda.tools.make_default_context()
         # Memory on Device
         gpu_alloc = cuda.mem_alloc(self.data.nbytes)
+        gpu_spheres= cuda.mem_alloc(self.spheres.nbytes)
+        gpu_numspheres = cuda.mem_alloc(self.numspheres.nbytes)
+        gpu_rows = cuda.mem_alloc(self.rows.nbytes)
+        gpu_columns = cuda.mem_alloc(self.columns.nbytes)
+        # Copy data from Host to Device
+        cuda.memcpy_htod(gpu_spheres, self.spheres)
+        cuda.memcpy_htod(gpu_numspheres, self.numspheres)
+        cuda.memcpy_htod(gpu_rows, self.rows)
+        cuda.memcpy_htod(gpu_columns, self.columns)
         # Execute on host
         mod = SourceModule(code)
         kernel = mod.get_function("RayTracer")
-        kernel(gpu_alloc, block=(1, 1, 1), grid=(self.rows, self.columns))
+        kernel(gpu_alloc, gpu_spheres, gpu_numspheres, gpu_rows, gpu_columns,
+               block=(self.threads, self.threads, 1), 
+               grid=(int(self.rows / self.threads), int(self.columns / self.threads)))
         # Copy data from Device to Host
         cuda.memcpy_dtoh(self.data, gpu_alloc)
         ctx.pop()
         self.SetImage(self.data)
-        print "Go!!!"
+    def CreateSpheres(self):
+        self.spheres_list = []
+        sphere = []
+        for index in range(self.numspheres):
+            sphere.append(random.randint(0, 255)) # Red Channel
+            sphere.append(random.randint(0, 255)) # Green Channel
+            sphere.append(random.randint(0, 255)) # Blue Channel
+            sphere.append(random.randint(0, 100)) # Radius
+            sphere.append(random.randint(-(self.rows / 2), self.rows / 2)) # x
+            sphere.append(random.randint(-(self.columns / 2), self.columns / 2)) # y
+            sphere.append(random.randint(0, 256)) # z
+            self.spheres_list.append(sphere)
+        return self.spheres_list
     def SetImage(self, data):
-        # qimage2ndarray import(s)
         import qimage2ndarray
         image = qimage2ndarray.array2qimage(data)
         pixmap = QtGui.QPixmap(image)
