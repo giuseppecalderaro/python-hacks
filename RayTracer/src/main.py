@@ -45,7 +45,7 @@ class MainWindow(QtGui.QMainWindow):
         cuda.memcpy_htod(gpu_columns, self.columns)
         # Execute on host
         mod = SourceModule(code)
-        gpu_spheres = mod.get_global("spheres")      
+        gpu_spheres = mod.get_global("spheres")    
         cuda.memcpy_htod(gpu_spheres[0], self.spheres)
         kernel = mod.get_function("RayTracer")
         kernel(gpu_alloc, gpu_rows, gpu_columns,

@@ -3,13 +3,13 @@ code = """
 #define SPHERES 10
 
 struct sphere {
-    int r; /* Red channel.  */
-    int g; /* Green channel.  */
-    int b; /* Blue channel.  */
-    int radius; /* Radius.  */
-    int x; /* Centre x.  */
-    int y; /* Centre y.  */
-    int z; /* Centre z.  */
+    long r; /* Red channel.  */
+    long g; /* Green channel.  */
+    long b; /* Blue channel.  */
+    long radius; /* Radius.  */
+    long x; /* Centre x.  */
+    long y; /* Centre y.  */
+    long z; /* Centre z.  */
 };
 __device__ __constant__ struct sphere spheres[SPHERES];
 
