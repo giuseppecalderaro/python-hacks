@@ -1,6 +1,7 @@
 import sys
 import numpy
 import random
+import array
 # Qt4 import(s)
 from PyQt4 import QtCore, QtGui
 # PyCUDA import(s)
@@ -30,26 +31,24 @@ class MainWindow(QtGui.QMainWindow):
         self.data = qimage2ndarray.rgb_view(image)
         # Needs a contiguos buffer
         self.data = numpy.copy(self.data)
-        self.spheres = numpy.copy(self.CreateSpheres())
+        self.spheres = numpy.array(self.CreateSpheres())
         # Init CUDA
         cuda.init()
         # Create CUDA Context
         ctx = pycuda.tools.make_default_context()
         # Memory on Device
         gpu_alloc = cuda.mem_alloc(self.data.nbytes)
-        gpu_spheres= cuda.mem_alloc(self.spheres.nbytes)
-        gpu_numspheres = cuda.mem_alloc(self.numspheres.nbytes)
         gpu_rows = cuda.mem_alloc(self.rows.nbytes)
         gpu_columns = cuda.mem_alloc(self.columns.nbytes)
         # Copy data from Host to Device
-        cuda.memcpy_htod(gpu_spheres, self.spheres)
-        cuda.memcpy_htod(gpu_numspheres, self.numspheres)
         cuda.memcpy_htod(gpu_rows, self.rows)
         cuda.memcpy_htod(gpu_columns, self.columns)
         # Execute on host
         mod = SourceModule(code)
+        gpu_spheres = mod.get_global("spheres")      
+        cuda.memcpy_htod(gpu_spheres[0], self.spheres)
         kernel = mod.get_function("RayTracer")
-        kernel(gpu_alloc, gpu_spheres, gpu_numspheres, gpu_rows, gpu_columns,
+        kernel(gpu_alloc, gpu_rows, gpu_columns,
                block=(self.threads, self.threads, 1), 
                grid=(int(self.rows / self.threads), int(self.columns / self.threads)))
         # Copy data from Device to Host
@@ -57,17 +56,15 @@ class MainWindow(QtGui.QMainWindow):
         ctx.pop()
         self.SetImage(self.data)
     def CreateSpheres(self):
-        self.spheres_list = []
-        sphere = []
+        self.spheres_list = array.array('l')
         for index in range(self.numspheres):
-            sphere.append(random.randint(0, 255)) # Red Channel
-            sphere.append(random.randint(0, 255)) # Green Channel
-            sphere.append(random.randint(0, 255)) # Blue Channel
-            sphere.append(random.randint(0, 100)) # Radius
-            sphere.append(random.randint(-(self.rows / 2), self.rows / 2)) # x
-            sphere.append(random.randint(-(self.columns / 2), self.columns / 2)) # y
-            sphere.append(random.randint(0, 256)) # z
-            self.spheres_list.append(sphere)
+            self.spheres_list.append(random.randint(0, 255)) # Red Channel
+            self.spheres_list.append(random.randint(0, 255)) # Green Channel
+            self.spheres_list.append(random.randint(0, 255)) # Blue Channel
+            self.spheres_list.append(random.randint(0, 100)) # Radius
+            self.spheres_list.append(random.randint(-(self.rows / 2), self.rows / 2)) # x
+            self.spheres_list.append(random.randint(-(self.columns / 2), self.columns / 2)) # y
+            self.spheres_list.append(random.randint(0, 256)) # z
         return self.spheres_list
     def SetImage(self, data):
         import qimage2ndarray

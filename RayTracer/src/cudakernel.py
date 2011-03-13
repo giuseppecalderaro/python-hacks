@@ -1,5 +1,6 @@
 code = """
 #define INF 2e10f
+#define SPHERES 10
 
 struct sphere {
     int r; /* Red channel.  */
@@ -10,6 +11,7 @@ struct sphere {
     int y; /* Centre y.  */
     int z; /* Centre z.  */
 };
+__device__ __constant__ struct sphere spheres[SPHERES];
 
 __device__ float hit(struct sphere *sphere, float ox, float oy, float *n)
 {
@@ -25,7 +27,7 @@ __device__ float hit(struct sphere *sphere, float ox, float oy, float *n)
     return -INF;
 }
 
-__global__ void RayTracer(unsigned char *data, struct sphere *spheres, int *num_spheres, int *rows, int *columns)
+__global__ void RayTracer(unsigned char *data, int *rows, int *columns)
 {
     int x = threadIdx.x + blockIdx.x * blockDim.x;
     int y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -35,7 +37,7 @@ __global__ void RayTracer(unsigned char *data, struct sphere *spheres, int *num_
     float oy = (y - *columns / 2);
     float r = 0, g = 0, b = 0;
     float maxz = -INF;
-    for(int i = 0; i < *num_spheres; i++) {
+    for(int i = 0; i < SPHERES; i++) {
         float n;
         float t = hit(&spheres[i], ox, oy, &n);
         if (t > maxz) {
