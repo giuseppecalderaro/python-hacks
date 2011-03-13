@@ -36,6 +36,9 @@ class MainWindow(QtGui.QMainWindow):
         cuda.init()
         # Create CUDA Context
         ctx = pycuda.tools.make_default_context()
+        # Declare event(s)
+        startEvent = cuda.Event()
+        stopEvent = cuda.Event()
         # Memory on Device
         gpu_alloc = cuda.mem_alloc(self.data.nbytes)
         gpu_rows = cuda.mem_alloc(self.rows.nbytes)
@@ -48,9 +51,13 @@ class MainWindow(QtGui.QMainWindow):
         gpu_spheres = mod.get_global("spheres")    
         cuda.memcpy_htod(gpu_spheres[0], self.spheres)
         kernel = mod.get_function("RayTracer")
+        startEvent.record()
         kernel(gpu_alloc, gpu_rows, gpu_columns,
                block=(self.threads, self.threads, 1), 
                grid=(int(self.rows / self.threads), int(self.columns / self.threads)))
+        stopEvent.record()
+        stopEvent.synchronize()
+        print("Time elapsed: %fms" % startEvent.time_till(stopEvent))
         # Copy data from Device to Host
         cuda.memcpy_dtoh(self.data, gpu_alloc)
         ctx.pop()
