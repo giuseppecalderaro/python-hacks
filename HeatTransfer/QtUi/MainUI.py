@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'MainUI.ui'
 #
-# Created: Wed Mar 16 22:13:08 2011
+# Created: Wed Mar 16 22:19:09 2011
 #      by: PyQt4 UI code generator 4.8.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -24,8 +24,11 @@ class Ui_MainWindow(object):
         self.graphicsView.setGeometry(QtCore.QRect(10, 10, 621, 391))
         self.graphicsView.setObjectName(_fromUtf8("graphicsView"))
         self.startButton = QtGui.QPushButton(self.centralwidget)
-        self.startButton.setGeometry(QtCore.QRect(260, 410, 114, 32))
+        self.startButton.setGeometry(QtCore.QRect(150, 410, 114, 32))
         self.startButton.setObjectName(_fromUtf8("startButton"))
+        self.stopButton = QtGui.QPushButton(self.centralwidget)
+        self.stopButton.setGeometry(QtCore.QRect(320, 410, 114, 32))
+        self.stopButton.setObjectName(_fromUtf8("stopButton"))
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 640, 22))
@@ -41,4 +44,5 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
         self.startButton.setText(QtGui.QApplication.translate("MainWindow", "Start", None, QtGui.QApplication.UnicodeUTF8))
+        self.stopButton.setText(QtGui.QApplication.translate("MainWindow", "Stop", None, QtGui.QApplication.UnicodeUTF8))
 
