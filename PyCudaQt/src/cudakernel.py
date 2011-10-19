@@ -2,7 +2,7 @@ code = """
 struct cuComplex {
     float r;
     float i;
-    cuComplex(float a, float b) : r(a), i(b) {}
+    __device__ cuComplex(float a, float b) : r(a), i(b) {}
     __device__ float magnitude2(void) {
         return r * r + i * i;
     }
